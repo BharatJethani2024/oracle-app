@@ -1,11 +1,10 @@
 {
-  "name": "blackhole-server",
+  "name": "oracle-server",
   "version": "1.0.0",
-  "description": "Blackhole video downloader backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "postinstall": "pip install yt-dlp || pip3 install yt-dlp || true"
+    "build": "pip3 install yt-dlp && pip3 install yt-dlp"
   },
   "dependencies": {
     "express": "^4.18.2"

@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0610">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>ORACLE</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #07040f;
+  --bg2:       #0d0818;
+  --purple:    #6b3fa0;
+  --violet:    #9b59d4;
+  --gold:      #d4a843;
+  --gold-pale: #f0d080;
+  --mist:      rgba(155,89,212,0.12);
+  --white:     #ede8f5;
+  --dim:       #5a4d70;
+}
+
+html, body {
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'IM Fell English', serif;
+  overflow: hidden;
+}
+
+/* ── STARFIELD CANVAS ── */
+#stars {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── NEBULA GLOW ── */
+.nebula {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+.nebula-1 {
+  width: 400px; height: 400px;
+  top: -100px; left: -80px;
+  background: radial-gradient(circle, rgba(107,63,160,0.18) 0%, transparent 70%);
+  animation: nebula-drift 12s ease-in-out infinite alternate;
+}
+.nebula-2 {
+  width: 300px; height: 300px;
+  bottom: -60px; right: -60px;
+  background: radial-gradient(circle, rgba(212,168,67,0.1) 0%, transparent 70%);
+  animation: nebula-drift 16s ease-in-out infinite alternate-reverse;
+}
+@keyframes nebula-drift {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(20px, 30px) scale(1.1); }
+}
+
+/* ── LAYOUT ── */
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 52px 24px 40px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── HEADER ── */
+header {
+  width: 100%;
+  text-align: center;
+  position: relative;
+  z-index: 10;
+}
+
+.rune-row {
+  font-size: 10px;
+  letter-spacing: 0.5em;
+  color: var(--dim);
+  margin-bottom: 8px;
+  font-family: 'Cinzel', serif;
+  animation: fade-in 1.2s ease both;
+}
+
+.app-title {
+  font-family: 'Cinzel', serif;
+  font-weight: 600;
+  font-size: 32px;
+  letter-spacing: 0.45em;
+  color: var(--gold-pale);
+  text-shadow:
+    0 0 20px rgba(212,168,67,0.5),
+    0 0 60px rgba(212,168,67,0.15);
+  animation: fade-in 1s ease 0.2s both;
+}
+
+.app-tagline {
+  font-style: italic;
+  font-size: 12px;
+  color: var(--dim);
+  letter-spacing: 0.15em;
+  margin-top: 5px;
+  animation: fade-in 1s ease 0.4s both;
+}
+
+/* ── SCROLL OF INQUIRY (url input area) ── */
+.scroll-area {
+  width: 100%;
+  max-width: 340px;
+  position: relative;
+  z-index: 10;
+  animation: fade-in 1s ease 0.6s both;
+}
+
+.scroll-label {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.4em;
+  color: var(--dim);
+  text-transform: uppercase;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.scroll-input-wrapper {
+  position: relative;
+}
+
+/* Decorative corner runes */
+.scroll-input-wrapper::before,
+.scroll-input-wrapper::after {
+  content: '✦';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold);
+  font-size: 10px;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 2;
+}
+.scroll-input-wrapper::before { left: 12px; }
+.scroll-input-wrapper::after  { right: 44px; }
+
+.url-input {
+  width: 100%;
+  background: rgba(13,8,24,0.9);
+  border: 1px solid rgba(107,63,160,0.4);
+  border-radius: 1px;
+  color: var(--white);
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 13px;
+  padding: 14px 48px 14px 32px;
+  outline: none;
+  letter-spacing: 0.03em;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+.url-input::placeholder { color: var(--dim); font-style: italic; }
+.url-input:focus {
+  border-color: rgba(155,89,212,0.7);
+  box-shadow: 0 0 20px rgba(107,63,160,0.2), inset 0 0 10px rgba(107,63,160,0.05);
+}
+
+.paste-btn {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  cursor: pointer; color: var(--dim);
+  font-size: 18px; padding: 4px;
+  transition: color 0.2s;
+  z-index: 3;
+}
+.paste-btn:hover { color: var(--gold); }
+
+/* ── ORACLE SPHERE ── */
+.sphere-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.sphere-container {
+  position: relative;
+  width: 220px; height: 220px;
+  cursor: pointer;
+  -webkit-user-select: none; user-select: none;
+}
+
+/* Outer glow ring */
+.sphere-container::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 50%;
+  border: 1px solid rgba(155,89,212,0.2);
+  animation: orbit-ring 8s linear infinite;
+}
+
+/* Second decorative ring */
+.sphere-container::after {
+  content: '';
+  position: absolute;
+  inset: -28px;
+  border-radius: 50%;
+  border: 1px dashed rgba(212,168,67,0.1);
+  animation: orbit-ring 14s linear infinite reverse;
+}
+
+@keyframes orbit-ring {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* The glass sphere itself */
+.sphere {
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(180,140,255,0.18) 0%, transparent 45%),
+    radial-gradient(circle at 68% 72%, rgba(107,63,160,0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, #130b22 0%, #07040f 100%);
+  border: 1px solid rgba(155,89,212,0.35);
+  box-shadow:
+    inset 0 0 60px rgba(107,63,160,0.3),
+    inset 0 0 120px rgba(0,0,0,0.6),
+    0 0 40px rgba(107,63,160,0.15),
+    0 0 80px rgba(107,63,160,0.06);
+  transition: transform 0.2s ease, box-shadow 0.4s;
+}
+
+.sphere-container:hover .sphere {
+  transform: scale(1.03);
+  box-shadow:
+    inset 0 0 60px rgba(107,63,160,0.4),
+    inset 0 0 120px rgba(0,0,0,0.5),
+    0 0 60px rgba(107,63,160,0.25),
+    0 0 120px rgba(107,63,160,0.1);
+}
+
+.sphere:active { transform: scale(0.97); }
+
+/* Glass highlight */
+.sphere-highlight {
+  position: absolute;
+  top: 12%; left: 18%;
+  width: 42%; height: 32%;
+  background: radial-gradient(ellipse, rgba(255,255,255,0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  transform: rotate(-25deg);
+  pointer-events: none;
+}
+
+/* Inner mist / smoke */
+.sphere-mist {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 30% 60%, rgba(155,89,212,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 40%, rgba(212,168,67,0.08) 0%, transparent 50%);
+  animation: mist-swirl 6s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes mist-swirl {
+  from { transform: rotate(0deg) scale(1);   opacity: 0.7; }
+  to   { transform: rotate(15deg) scale(1.05); opacity: 1; }
+}
+
+/* Floating rune symbols inside sphere */
+.sphere-runes {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rune {
+  position: absolute;
+  font-family: 'Cinzel', serif;
+  color: rgba(155,89,212,0.25);
+  font-size: 14px;
+  animation: rune-float 4s ease-in-out infinite;
+}
+
+.rune:nth-child(1) { top: 25%; left: 20%; animation-delay: 0s;    font-size: 12px; }
+.rune:nth-child(2) { top: 55%; left: 65%; animation-delay: 1.2s;  font-size: 16px; }
+.rune:nth-child(3) { top: 70%; left: 25%; animation-delay: 2.4s;  font-size: 10px; }
+.rune:nth-child(4) { top: 20%; left: 60%; animation-delay: 0.8s;  font-size: 13px; }
+.rune:nth-child(5) { top: 45%; left: 42%; animation-delay: 1.8s;  font-size: 18px; opacity: 0.15; }
+
+@keyframes rune-float {
+  0%,100% { transform: translateY(0)   opacity: 0.25; }
+  50%      { transform: translateY(-6px); opacity: 0.5; }
+}
+
+/* Eye symbol in center — the oracle's gaze */
+.sphere-eye {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 56px; height: 26px;
+  pointer-events: none;
+  transition: opacity 0.5s;
+}
+
+.eye-outline {
+  fill: none;
+  stroke: rgba(212,168,67,0.4);
+  stroke-width: 1;
+}
+.eye-pupil {
+  fill: rgba(155,89,212,0.5);
+  animation: eye-pulse 3s ease-in-out infinite;
+}
+.eye-shine {
+  fill: rgba(255,255,255,0.3);
+}
+
+@keyframes eye-pulse {
+  0%,100% { transform-origin: center; transform: scale(1); opacity: 0.5; }
+  50%      { transform: scale(1.15); opacity: 0.8; }
+}
+
+/* Progress arc */
+.progress-svg {
+  position: absolute;
+  inset: -4px;
+  width: calc(100% + 8px);
+  height: calc(100% + 8px);
+  transform: rotate(-90deg);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+
+.progress-arc {
+  fill: none;
+  stroke: url(#arcGrad);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 692;
+  stroke-dashoffset: 692;
+  transition: stroke-dashoffset 0.3s linear;
+  filter: drop-shadow(0 0 6px rgba(212,168,67,0.7));
+}
+
+/* ── PROPHECY TEXT (status) ── */
+.prophecy {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--dim);
+  letter-spacing: 0.1em;
+  text-align: center;
+  min-height: 22px;
+  transition: color 0.5s;
+}
+.prophecy.active { color: var(--violet); text-shadow: 0 0 10px rgba(155,89,212,0.4); }
+.prophecy.done   { color: var(--gold);   text-shadow: 0 0 10px rgba(212,168,67,0.4); }
+.prophecy.error  { color: #c0605a; }
+
+/* ── VISIONS (downloads history) ── */
+.visions-section {
+  width: 100%;
+  max-width: 340px;
+  z-index: 10;
+  animation: fade-in 1s ease 0.8s both;
+}
+
+.visions-title {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.45em;
+  color: var(--dim);
+  text-align: center;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.visions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 90px;
+  overflow-y: auto;
+}
+.visions-list::-webkit-scrollbar { width: 2px; }
+.visions-list::-webkit-scrollbar-thumb { background: #1a1030; border-radius: 2px; }
+
+.vision-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(13,8,24,0.7);
+  border: 1px solid rgba(107,63,160,0.2);
+  border-left: 2px solid var(--purple);
+  animation: vision-appear 0.4s ease;
+}
+
+@keyframes vision-appear {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.vision-glyph {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--gold);
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.vision-glyph.pending { color: var(--dim); animation: blink 1.2s infinite; }
+.vision-glyph.error   { color: #c0605a; }
+
+@keyframes blink { 0%,100%{opacity:0.2} 50%{opacity:0.8} }
+
+.vision-name {
+  font-style: italic;
+  font-size: 11px;
+  color: #8878a8;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vision-size {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  color: var(--dim);
+  flex-shrink: 0;
+}
+
+/* ── SETTINGS DRAWER ── */
+.settings-btn {
+  position: fixed;
+  top: 16px; right: 16px;
+  background: rgba(13,8,24,0.8);
+  border: 1px solid rgba(107,63,160,0.3);
+  border-radius: 50%;
+  width: 34px; height: 34px;
+  color: var(--dim);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50;
+  transition: border-color 0.3s, color 0.3s;
+}
+.settings-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+.drawer-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 60;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+.drawer {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #0d0818;
+  border-top: 1px solid rgba(107,63,160,0.3);
+  padding: 28px 24px 40px;
+  z-index: 70;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32,0,0.15,1);
+}
+.drawer-overlay.open .drawer { transform: translateY(0); }
+
+.drawer h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 0.3em;
+  color: var(--gold-pale);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.drawer label {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  color: var(--dim);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.drawer input {
+  width: 100%;
+  background: #07040f;
+  border: 1px solid rgba(107,63,160,0.3);
+  color: var(--white);
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  font-size: 13px;
+  padding: 12px 14px;
+  outline: none;
+  margin-bottom: 14px;
+  transition: border-color 0.3s;
+}
+.drawer input:focus { border-color: var(--violet); }
+
+.drawer-save {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(212,168,67,0.4);
+  color: var(--gold);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  padding: 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.drawer-save:hover {
+  background: rgba(212,168,67,0.07);
+  box-shadow: 0 0 20px rgba(212,168,67,0.1);
+}
+
+/* ── DISSOLVE PARTICLES (canvas overlay) ── */
+#particleCanvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* ── UTILITY ── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+body.reading .sphere-mist {
+  animation: mist-swirl 1.5s ease-in-out infinite alternate;
+}
+body.reading .sphere {
+  box-shadow:
+    inset 0 0 80px rgba(107,63,160,0.5),
+    inset 0 0 40px rgba(212,168,67,0.1),
+    0 0 80px rgba(107,63,160,0.3),
+    0 0 160px rgba(107,63,160,0.1);
+}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<canvas id="particleCanvas"></canvas>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+
+<button class="settings-btn" id="settingsBtn">⚙</button>
+
+<!-- HEADER -->
+<header>
+  <div class="rune-row">✦ &nbsp; ᚩ ᚱ ᚪ ᚳ ᛚ ᛖ &nbsp; ✦</div>
+  <div class="app-title">ORACLE</div>
+  <div class="app-tagline">The sphere sees all. The sphere captures all.</div>
+</header>
+
+<!-- URL INPUT -->
+<div class="scroll-area">
+  <div class="scroll-label">Offer your vision</div>
+  <div class="scroll-input-wrapper">
+    <input
+      class="url-input"
+      id="urlInput"
+      type="url"
+      placeholder="Speak the URL into the void…"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button class="paste-btn" id="pasteBtn">📋</button>
+  </div>
+</div>
+
+<!-- ORACLE SPHERE -->
+<div class="sphere-section">
+  <div class="sphere-container" id="sphereContainer">
+
+    <div class="sphere" id="sphere">
+      <div class="sphere-highlight"></div>
+      <div class="sphere-mist"></div>
+      <div class="sphere-runes">
+        <span class="rune">ᚩ</span>
+        <span class="rune">ᛖ</span>
+        <span class="rune">ᚱ</span>
+        <span class="rune">✦</span>
+        <span class="rune">ᚪ</span>
+      </div>
+      <!-- Eye of the Oracle -->
+      <svg class="sphere-eye" viewBox="0 0 56 26" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="28" cy="13" rx="26" ry="11" class="eye-outline"/>
+        <circle cx="28" cy="13" r="7" class="eye-pupil"/>
+        <circle cx="28" cy="13" r="3.5" fill="rgba(10,6,20,0.8)"/>
+        <circle cx="31" cy="10" r="1.5" class="eye-shine"/>
+      </svg>
+    </div>
+
+    <!-- Progress arc SVG -->
+    <svg class="progress-svg" id="progressSvg" viewBox="0 0 228 228">
+      <defs>
+        <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stop-color="#6b3fa0"/>
+          <stop offset="50%"  stop-color="#d4a843"/>
+          <stop offset="100%" stop-color="#6b3fa0"/>
+        </linearGradient>
+      </defs>
+      <circle cx="114" cy="114" r="110" class="progress-arc" id="progressArc"/>
+    </svg>
+  </div>
+
+  <div class="prophecy" id="prophecy">Consult the Oracle</div>
+</div>
+
+<!-- VISIONS LOG -->
+<div class="visions-section">
+  <div class="visions-title">✦ &nbsp; Captured Visions &nbsp; ✦</div>
+  <div class="visions-list" id="visionsList"></div>
+</div>
+
+<!-- SETTINGS DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay">
+  <div class="drawer">
+    <h3>Arcane Configuration</h3>
+    <label>Backend Sanctum URL</label>
+    <input type="url" id="serverInput" placeholder="https://your-server.railway.app"/>
+    <button class="drawer-save" id="drawerSave">Seal the Covenant</button>
+  </div>
+</div>
+
+<script>
+// ── STARFIELD ──
+(function() {
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 120; i++) {
+    stars.push({
+      x: Math.random(),
+      y: Math.random(),
+      r: Math.random() * 1.2,
+      t: Math.random() * Math.PI * 2,
+      sp: 0.3 + Math.random() * 0.7
+    });
+  }
+
+  function drawStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const now = Date.now() / 1000;
+    for (const s of stars) {
+      const alpha = 0.2 + 0.5 * Math.abs(Math.sin(s.t + now * s.sp));
+      ctx.beginPath();
+      ctx.arc(s.x * canvas.width, s.y * canvas.height, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,180,255,${alpha})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(drawStars);
+  }
+  drawStars();
+})();
+
+// ── PARTICLE DISSOLVE ──
+(function() {
+  const canvas = document.getElementById('particleCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  window.addEventListener('resize', () => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  let particles = [];
+
+  window.spawnDissolve = function(cx, cy, count=60) {
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 1 + Math.random() * 4;
+      particles.push({
+        x: cx, y: cy,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        r: 1 + Math.random() * 3,
+        alpha: 1,
+        color: Math.random() > 0.5 ? '#d4a843' : '#9b59d4',
+        life: 0.6 + Math.random() * 0.6
+      });
+    }
+  };
+
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles = particles.filter(p => p.alpha > 0.02);
+    for (const p of particles) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color + Math.round(p.alpha * 255).toString(16).padStart(2,'0');
+      ctx.fill();
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.05;
+      p.alpha -= 0.016 / p.life;
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+// ── CONFIG ──
+let SERVER_URL = localStorage.getItem('oracle_server') || '';
+
+const urlInput      = document.getElementById('urlInput');
+const pasteBtn      = document.getElementById('pasteBtn');
+const sphereContainer = document.getElementById('sphereContainer');
+const prophecy      = document.getElementById('prophecy');
+const progressArc   = document.getElementById('progressArc');
+const progressSvg   = document.getElementById('progressSvg');
+const visionsList   = document.getElementById('visionsList');
+const settingsBtn   = document.getElementById('settingsBtn');
+const drawerOverlay = document.getElementById('drawerOverlay');
+const serverInput   = document.getElementById('serverInput');
+const drawerSave    = document.getElementById('drawerSave');
+
+serverInput.value = SERVER_URL;
+
+// ── SETTINGS ──
+settingsBtn.addEventListener('click', () => drawerOverlay.classList.add('open'));
+drawerOverlay.addEventListener('click', e => { if(e.target===drawerOverlay) drawerOverlay.classList.remove('open'); });
+drawerSave.addEventListener('click', () => {
+  SERVER_URL = serverInput.value.trim().replace(/\/$/, '');
+  localStorage.setItem('oracle_server', SERVER_URL);
+  drawerOverlay.classList.remove('open');
+  setProphecy('The covenant is sealed', 'done');
+  setTimeout(() => setProphecy('Consult the Oracle', ''), 2500);
+});
+
+// ── PASTE ──
+pasteBtn.addEventListener('click', async () => {
+  try {
+    urlInput.value = await navigator.clipboard.readText();
+  } catch { urlInput.focus(); }
+});
+
+// ── STATUS ──
+function setProphecy(msg, state='') {
+  prophecy.textContent = msg;
+  prophecy.className = 'prophecy' + (state ? ' ' + state : '');
+}
+
+// ── PROGRESS ──
+const CIRC = 692;
+function setProgress(pct) {
+  progressArc.style.strokeDashoffset = CIRC - (pct / 100) * CIRC;
+}
+
+// ── VISION ITEMS ──
+function addVision(name, status='pending') {
+  const item = document.createElement('div');
+  item.className = 'vision-item';
+  item.innerHTML = `
+    <span class="vision-glyph ${status}">✦</span>
+    <span class="vision-name">${name}</span>
+    <span class="vision-size"></span>
+  `;
+  visionsList.prepend(item);
+  return item;
+}
+
+function updateVision(item, status, size='') {
+  const g = item.querySelector('.vision-glyph');
+  g.className = 'vision-glyph' + (status ? ' '+status : '');
+  if (size) item.querySelector('.vision-size').textContent = size;
+}
+
+// ── MAIN ──
+let busy = false;
+
+sphereContainer.addEventListener('click', async () => {
+  if (busy) return;
+
+  const url = urlInput.value.trim();
+
+  if (!url) {
+    setProphecy('The Oracle requires a vision…', 'error');
+    setTimeout(() => setProphecy('Consult the Oracle'), 2000);
+    return;
+  }
+  if (!SERVER_URL) {
+    setProphecy('Configure the sanctum first…', 'error');
+    setTimeout(() => { drawerOverlay.classList.add('open'); setProphecy('Consult the Oracle'); }, 1500);
+    return;
+  }
+  try { new URL(url); } catch {
+    setProphecy('That vision is malformed…', 'error');
+    setTimeout(() => setProphecy('Consult the Oracle'), 2000);
+    return;
+  }
+
+  busy = true;
+  document.body.classList.add('reading');
+  setProphecy('The Oracle peers into the void…', 'active');
+  setProgress(0);
+  progressSvg.style.opacity = '1';
+
+  const shortName = url.replace(/^https?:\/\//, '').substring(0, 36) + '…';
+  const vItem = addVision(shortName, 'pending');
+
+  let fake = 0;
+  const fakeTimer = setInterval(() => {
+    fake = Math.min(fake + Math.random() * 5, 85);
+    setProgress(fake);
+  }, 280);
+
+  try {
+    const res = await fetch(`${SERVER_URL}/download?url=${encodeURIComponent(url)}`);
+    clearInterval(fakeTimer);
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'The vision could not be captured' }));
+      throw new Error(err.error);
+    }
+
+    setProgress(94);
+    setProphecy('Pulling the vision through…', 'active');
+
+    const cd = res.headers.get('Content-Disposition') || '';
+    const m = cd.match(/filename="?(.+?)"?$/);
+    const filename = m ? m[1] : 'oracle_vision.mp4';
+
+    const blob = await res.blob();
+    setProgress(100);
+
+    const bUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = bUrl; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(bUrl), 5000);
+
+    const sz = blob.size / 1024;
+    const szStr = sz > 1024 ? `${(sz/1024).toFixed(1)} MB` : `${sz.toFixed(0)} KB`;
+    updateVision(vItem, '', szStr);
+
+    // Particles from sphere center
+    const rect = sphereContainer.getBoundingClientRect();
+    spawnDissolve(rect.left + rect.width/2, rect.top + rect.height/2, 80);
+
+    setProphecy('The vision has been captured', 'done');
+    urlInput.value = '';
+    setTimeout(() => setProphecy('Consult the Oracle'), 3500);
+
+  } catch(err) {
+    clearInterval(fakeTimer);
+    updateVision(vItem, 'error', '—');
+    setProphecy(err.message || 'The Oracle is blind to this', 'error');
+    setTimeout(() => setProphecy('Consult the Oracle'), 3000);
+  } finally {
+    busy = false;
+    document.body.classList.remove('reading');
+    setProgress(0);
+    progressSvg.style.opacity = '0';
+  }
+});
+</script>
+</body>
+</html>

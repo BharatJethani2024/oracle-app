@@ -1,0 +1,3 @@
+# nixpacks.toml — tells Railway to install yt-dlp alongside Node.js
+[phases.setup]
+nixPkgs = ["yt-dlp", "ffmpeg"]

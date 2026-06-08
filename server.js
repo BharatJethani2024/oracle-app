@@ -1,11 +1,13 @@
 const express = require('express');
-const { execFile } = require('child_process');
+const https = require('https');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { execFile, exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const YT_DLP_PATH = '/usr/local/bin/yt-dlp';
 
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,6 +15,38 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(200);
   next();
 });
+
+// Download yt-dlp binary using Node https
+function downloadYtDlp() {
+  return new Promise((resolve, reject) => {
+    if (fs.existsSync(YT_DLP_PATH)) {
+      console.log('yt-dlp already exists');
+      return resolve();
+    }
+    console.log('Downloading yt-dlp...');
+    const url = 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp';
+    const file = fs.createWriteStream(YT_DLP_PATH);
+
+    function get(url) {
+      https.get(url, (res) => {
+        if (res.statusCode === 301 || res.statusCode === 302) {
+          return get(res.headers.location);
+        }
+        res.pipe(file);
+        file.on('finish', () => {
+          file.close(() => {
+            exec(`chmod +x ${YT_DLP_PATH}`, (err) => {
+              if (err) return reject(err);
+              console.log('yt-dlp ready');
+              resolve();
+            });
+          });
+        });
+      }).on('error', reject);
+    }
+    get(url);
+  });
+}
 
 app.get('/', (req, res) => {
   res.json({ status: 'Oracle is running' });
@@ -26,6 +60,13 @@ app.get('/download', async (req, res) => {
     return res.status(400).json({ error: 'Invalid URL' });
   }
 
+  // Download yt-dlp if not present
+  try {
+    await downloadYtDlp();
+  } catch (err) {
+    return res.status(500).json({ error: 'Could not install yt-dlp: ' + err.message });
+  }
+
   const tmpId = `oracle_${Date.now()}`;
   const tmpOut = path.join(os.tmpdir(), `${tmpId}.mp4`);
 
@@ -37,7 +78,7 @@ app.get('/download', async (req, res) => {
     '-o', tmpOut
   ];
 
-  execFile('yt-dlp', args, { timeout: 120000 }, (err, stdout, stderr) => {
+  execFile(YT_DLP_PATH, args, { timeout: 120000 }, (err, stdout, stderr) => {
     if (err) {
       console.error('yt-dlp error:', stderr);
       let msg = 'Could not download this video';
@@ -63,4 +104,8 @@ app.get('/download', async (req, res) => {
   });
 });
 
-app.listen(PORT, () => console.log(`Oracle running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Oracle running on port ${PORT}`);
+  // Pre-download yt-dlp on startup
+  downloadYtDlp().catch(err => console.error('Startup yt-dlp download failed:', err));
+});

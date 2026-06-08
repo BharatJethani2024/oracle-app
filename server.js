@@ -18,6 +18,17 @@ app.get('/', (req, res) => {
   res.json({ status: 'Oracle is running' });
 });
 
+const ytDlpBinaryPath = path.join(os.tmpdir(), 'yt-dlp');
+
+async function getYtDlp() {
+  if (!fs.existsSync(ytDlpBinaryPath)) {
+    console.log('Downloading yt-dlp binary...');
+    await YTDlpWrap.downloadFromGithub(ytDlpBinaryPath);
+    console.log('yt-dlp binary ready');
+  }
+  return new YTDlpWrap(ytDlpBinaryPath);
+}
+
 app.get('/download', async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'Missing url' });
@@ -30,7 +41,7 @@ app.get('/download', async (req, res) => {
   const tmpOut = path.join(os.tmpdir(), `${tmpId}.mp4`);
 
   try {
-    const ytDlp = new YTDlpWrap();
+    const ytDlp = await getYtDlp();
     await ytDlp.execPromise([
       url,
       '-f', 'best[ext=mp4]/best',
@@ -54,8 +65,8 @@ app.get('/download', async (req, res) => {
     stream.on('error', () => fs.unlink(tmpOut, () => {}));
 
   } catch (err) {
-    console.error(err);
-    res.status(422).json({ error: 'Could not download this video' });
+    console.error('Download error:', err.message);
+    res.status(422).json({ error: err.message || 'Could not download this video' });
   }
 });
 

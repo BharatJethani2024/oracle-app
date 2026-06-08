@@ -1,5 +1,5 @@
 const express = require('express');
-const YTDlpWrap = require('yt-dlp-wrap').default;
+const { execFile } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -18,17 +18,6 @@ app.get('/', (req, res) => {
   res.json({ status: 'Oracle is running' });
 });
 
-const ytDlpBinaryPath = path.join(os.tmpdir(), 'yt-dlp');
-
-async function getYtDlp() {
-  if (!fs.existsSync(ytDlpBinaryPath)) {
-    console.log('Downloading yt-dlp binary...');
-    await YTDlpWrap.downloadFromGithub(ytDlpBinaryPath);
-    console.log('yt-dlp binary ready');
-  }
-  return new YTDlpWrap(ytDlpBinaryPath);
-}
-
 app.get('/download', async (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'Missing url' });
@@ -40,18 +29,26 @@ app.get('/download', async (req, res) => {
   const tmpId = `oracle_${Date.now()}`;
   const tmpOut = path.join(os.tmpdir(), `${tmpId}.mp4`);
 
-  try {
-    const ytDlp = await getYtDlp();
-    await ytDlp.execPromise([
-      url,
-      '-f', 'best[ext=mp4]/best',
-      '--no-playlist',
-      '--max-filesize', '500m',
-      '-o', tmpOut
-    ]);
+  const args = [
+    url,
+    '-f', 'best[ext=mp4]/best',
+    '--no-playlist',
+    '--max-filesize', '500m',
+    '-o', tmpOut
+  ];
+
+  execFile('yt-dlp', args, { timeout: 120000 }, (err, stdout, stderr) => {
+    if (err) {
+      console.error('yt-dlp error:', stderr);
+      let msg = 'Could not download this video';
+      if (stderr.includes('Unsupported URL')) msg = 'This URL is not supported';
+      if (stderr.includes('Private')) msg = 'Video is private';
+      if (stderr.includes('unavailable')) msg = 'Video is unavailable';
+      return res.status(422).json({ error: msg });
+    }
 
     if (!fs.existsSync(tmpOut)) {
-      return res.status(500).json({ error: 'Download failed' });
+      return res.status(500).json({ error: 'File not found after download' });
     }
 
     const stat = fs.statSync(tmpOut);
@@ -63,11 +60,7 @@ app.get('/download', async (req, res) => {
     stream.pipe(res);
     stream.on('end', () => fs.unlink(tmpOut, () => {}));
     stream.on('error', () => fs.unlink(tmpOut, () => {}));
-
-  } catch (err) {
-    console.error('Download error:', err.message);
-    res.status(422).json({ error: err.message || 'Could not download this video' });
-  }
+  });
 });
 
 app.listen(PORT, () => console.log(`Oracle running on port ${PORT}`));
